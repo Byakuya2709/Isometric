@@ -7,16 +7,15 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.*;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Timer;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
+import ctu.game.isometric.controller.AchievementManager;
 import ctu.game.isometric.controller.EffectManager;
 import ctu.game.isometric.controller.GameController;
 import ctu.game.isometric.model.entity.Enemy;
-import ctu.game.isometric.model.game.GameState;
-import ctu.game.isometric.model.game.Items;
-import ctu.game.isometric.model.game.Reward;
-import ctu.game.isometric.model.game.LetterGrid;
+import ctu.game.isometric.model.game.*;
 import ctu.game.isometric.model.world.MapEvent;
 import ctu.game.isometric.util.*;
 
@@ -25,7 +24,6 @@ import java.util.Map;
 import java.util.Random;
 
 import static ctu.game.isometric.util.FontGenerator.generateVietNameseFont;
-import static ctu.game.isometric.util.WordNetValidator.calculateScore;
 import static ctu.game.isometric.util.WordNetValidator.getTotalScore;
 
 
@@ -82,6 +80,8 @@ public class GameplayController {
     private EffectManager effectManager;
     private WordNetValidator wordValidator;
 
+    private AchievementManager achievementManager;
+
     public GameplayController(GameController gameController) {
         this.gameController = gameController;
         this.letterGrid = new LetterGrid();
@@ -89,7 +89,10 @@ public class GameplayController {
         this.effectManager = gameController.getEffectManager();
         this.wordValidator = gameController.getWordNetValidator();
         this.playerName = gameController.getCharacter().getName();
+        this.achievementManager = gameController.getAchievementManager();
+
         initializeUI();
+
     }
 
     private void initializeUI() {
@@ -250,7 +253,10 @@ public class GameplayController {
         batch.setColor(Color.WHITE);
 
         if (isCombatMode) renderCombatUI(batch);
-        else if (isVictory) renderReward(batch);
+
+        else if (isVictory){
+            renderReward(batch);
+        }
         else gameController.setState(GameState.EXPLORING);
 
         effectManager.render(batch);
@@ -804,11 +810,18 @@ public class GameplayController {
             combatLog = "Bạn đã hạ gục " + enemyName + "!";
             enemyHealth = 0;
             endCombat(true);
+
             if (currentEvent.isOneTime()) {
                 gameController.getEventManager().recordDefeatedEnemy(this.enemy.getEnemyID());
                 gameController.getEventManager().completeEvent(currentEvent.getId());
                 gameController.setEndEvent();
             }
+
+            achievementManager.updateProgress(Achievement.AchievementType.COMBAT_WIN, 1);// Render victory screen
+            achievementManager.checkEnemyDefeat(enemy.getEnemyName());
+
+            achievementManager.updateProgress(Achievement.AchievementType.WORD_COUNT, + gameController.getCharacter().getNewlearneWords().size());
+            System.out.println(2);
         }
     }
 
@@ -822,7 +835,7 @@ public class GameplayController {
         if (!active) return false;
 
         String word = letterGrid.getCurrentWord();
-        if (word.length() < 3) {
+        if (word.length() < 1) {
             showMessage("Words must be at least 3 letters long!");
             return false;
         }
@@ -884,7 +897,7 @@ public class GameplayController {
 
         this.playerHealth = gameController.getCharacter().getHealth();
         this.playerMaxHealth = gameController.getCharacter().getMaxHealth();
-
+        this.achievementManager = gameController.getAchievementManager();
         this.isCombatMode = true;
         this.isPlayerTurn = true;
         this.combatLog = "Bắt đầu cạnh tranh với " + enemyName + "!";
@@ -963,32 +976,19 @@ public class GameplayController {
 //        }
     }
 
-    // Getters
-    public boolean isInCombatMode() {
-        return isCombatMode;
+
+    public AchievementManager getAchievementManager() {
+        return achievementManager;
     }
 
-    public float getPlayerHealth() {
-        return playerHealth;
-    }
-
-    public float getEnemyHealth() {
-        return enemyHealth;
-    }
-
-    public LetterGrid getLetterGrid() {
-        return letterGrid;
-    }
-
-    public int getCurrentScore() {
-        return currentScore;
-    }
-
-    public String getCurrentWord() {
-        return letterGrid.getCurrentWord();
+    public void setAchievementManager(AchievementManager achievementManager) {
+        this.achievementManager = achievementManager;
     }
 
     public boolean isActive() {
         return active;
     }
+
+
+
 }

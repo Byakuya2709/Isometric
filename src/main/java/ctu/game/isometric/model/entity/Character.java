@@ -4,6 +4,7 @@ import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.utils.Array;
 import ctu.game.isometric.model.dictionary.Word;
+import ctu.game.isometric.model.game.Achievement;
 import ctu.game.isometric.model.game.Items;
 import ctu.game.isometric.model.world.IsometricMap;
 import ctu.game.isometric.util.ItemLoader;
@@ -32,9 +33,13 @@ public class Character {
     private IsometricMap gameMap;
     private float targetX, targetY;
     private float moveSpeed = 2.5f; // Grid cells per second
-    private static final float DIAGONAL_THRESHOLD = 0.3f; // For determining diagonal movement
 
-    private float score; // Score for the character
+    private float score;
+    // Score for the character
+    private int failedWordCount = 0;
+    private int fallenCount = 0 ;
+
+    private Set<Achievement> achievements;
 
     public static final String[] VALID_DIRECTIONS = {
             "up", "down", "left", "right", "left_down", "right_down", "left_up", "right_up"
@@ -52,7 +57,7 @@ public class Character {
         this.status = new HashMap<>();
         this.status.put("buffs", new ArrayList<>());
         this.status.put("debuffs", new ArrayList<>());
-
+        this.achievements = new HashSet<>();
         this.newlearneWords = new HashSet<>();
         this.learnedWords = new HashSet<>();
         this.learnedWords.add("HELLO");
@@ -71,11 +76,10 @@ public class Character {
         this.status = new HashMap<>();
         this.status.put("buffs", new ArrayList<>());
         this.status.put("debuffs", new ArrayList<>());
-
+        this.achievements = new HashSet<>();
         this.learnedWords = new HashSet<>();
         this.newlearneWords = new HashSet<>();
         this.learnedWords.add("HELLO");
-
         this.score=0;
 
     }
@@ -352,6 +356,59 @@ public class Character {
         }
     }
 
+
+    public void updateAchievements(Achievement.AchievementType type, int value) {
+        if (type == null) {
+            throw new IllegalArgumentException("Achievement type cannot be null");
+        }
+
+        if (achievements == null || achievements.isEmpty()) {
+            achievements = new HashSet<>();
+            return; // Skip processing if no achievements exist
+        }
+
+        // Find existing achievements of the same type
+        for (Achievement existingAchievement : achievements) {
+            if (existingAchievement.getType() == type) {
+                if (existingAchievement.isUnlocked()) {
+                    continue;
+                }
+
+                existingAchievement.update(value);
+                if (!existingAchievement.isUnlocked() &&
+                        existingAchievement.getCurrentValue() >= existingAchievement.getTargetValue()) {
+                    existingAchievement.setUnlocked(true);
+                }
+            }
+        }
+    }
+
+    public void setAchievements(HashSet<Achievement> achievements) {
+        this.achievements = achievements;
+    }
+
+    public Set<Achievement> getAchievements() {
+        if (achievements == null) {
+            achievements = new HashSet<>();
+        }
+        return achievements;
+    }
+
+    /**
+     * Check if character has an achievement
+     */
+    public boolean hasAchievement(String achievementId) {
+        if (achievements == null) return false;
+
+        for (Achievement achievement : achievements) {
+            if (achievement.getId().equals(achievementId)) {
+                return true;
+            }
+        }
+        return false;
+    }
+    
+
     public float getGridX() {
         return gridX;
     }
@@ -393,6 +450,22 @@ public class Character {
         this.gridY = y;
         this.targetX = x;
         this.targetY = y;
+    }
+
+    public int getFallenCount() {
+        return fallenCount;
+    }
+
+    public void setFallenCount(int fallenCount) {
+        this.fallenCount = fallenCount;
+    }
+
+    public int getFailedWordCount() {
+        return failedWordCount;
+    }
+
+    public void setFailedWordCount(int failedWordCount) {
+        this.failedWordCount = failedWordCount;
     }
 
     public String getName() {

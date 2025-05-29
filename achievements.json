@@ -1,0 +1,44 @@
+[
+{
+	"currentValue": {
+		"class": "java.lang.Integer",
+		"value": 0
+	},
+	"id": {
+		"class": "java.lang.String",
+		"value": "dragon_slayer"
+	},
+	"unlocked": {
+		"class": "java.lang.Boolean",
+		"value": false
+	}
+},
+{
+	"currentValue": {
+		"class": "java.lang.Integer",
+		"value": 1
+	},
+	"id": {
+		"class": "java.lang.String",
+		"value": "first_victory"
+	},
+	"unlocked": {
+		"class": "java.lang.Boolean",
+		"value": true
+	}
+},
+{
+	"currentValue": {
+		"class": "java.lang.Integer",
+		"value": 0
+	},
+	"id": {
+		"class": "java.lang.String",
+		"value": "word_master"
+	},
+	"unlocked": {
+		"class": "java.lang.Boolean",
+		"value": false
+	}
+}
+]

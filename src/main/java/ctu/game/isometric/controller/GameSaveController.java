@@ -12,10 +12,20 @@ import ctu.game.isometric.model.game.GameSave;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
+import javax.crypto.Cipher;
+import javax.crypto.spec.SecretKeySpec;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.util.Base64;
+
 public class GameSaveController {
     private static final String SAVE_DIRECTORY = "saves/";
     private static final int MAX_SAVE_FILES = 5;
     private final ObjectMapper objectMapper;
+
+    private static final String ENCRYPTION_KEY = "YourSecretKey123"; // Change this to something unique
+    private static final String ALGORITHM = "AES";
+    private String checksum;
 
     public GameSaveController() {
         // Configure ObjectMapper
@@ -33,11 +43,7 @@ public class GameSaveController {
         }
     }
 
-
-
-
-
-    public boolean saveGame(Character character, String saveName,EventManager eventManager) {
+    public boolean saveGame(Character character, String saveName, EventManager eventManager) {
         try {
             maintainSaveLimit();
 
@@ -75,9 +81,24 @@ public class GameSaveController {
                 filename += ".json";
             }
 
-            // Save JSON file
+            // Convert to JSON without checksum first
+            String jsonData = objectMapper.writeValueAsString(gameSave);
+
+            // Generate checksum
+            String checksum = generateChecksum(jsonData);
+
+            // Add checksum to GameSave object
+            setChecksum(checksum);
+
+            // Regenerate JSON with checksum included
+            jsonData = objectMapper.writeValueAsString(gameSave);
+
+            // Encrypt data
+            String encryptedData = encrypt(jsonData);
+
+            // Save encrypted file
             FileHandle file = Gdx.files.local(SAVE_DIRECTORY + filename);
-            file.writeString(objectMapper.writeValueAsString(gameSave), false);
+            file.writeString(encryptedData, false);
 
             // Save learned words if available
             saveLearnedWords(character);
@@ -91,6 +112,56 @@ public class GameSaveController {
             e.printStackTrace();
             return false;
         }
+    }
+
+    private String encrypt(String data) {
+        try {
+            SecretKeySpec secretKey = new SecretKeySpec(ENCRYPTION_KEY.getBytes(), ALGORITHM);
+            Cipher cipher = Cipher.getInstance(ALGORITHM);
+            cipher.init(Cipher.ENCRYPT_MODE, secretKey);
+            byte[] encryptedBytes = cipher.doFinal(data.getBytes(StandardCharsets.UTF_8));
+            return Base64.getEncoder().encodeToString(encryptedBytes);
+        } catch (Exception e) {
+            Gdx.app.error("GameSaveService", "Encryption error: " + e.getMessage());
+            throw new RuntimeException("Encryption failed", e);
+        }
+    }
+
+    private String decrypt(String encryptedData) {
+        try {
+            SecretKeySpec secretKey = new SecretKeySpec(ENCRYPTION_KEY.getBytes(), ALGORITHM);
+            Cipher cipher = Cipher.getInstance(ALGORITHM);
+            cipher.init(Cipher.DECRYPT_MODE, secretKey);
+            byte[] decodedBytes = Base64.getDecoder().decode(encryptedData);
+            byte[] decryptedBytes = cipher.doFinal(decodedBytes);
+            return new String(decryptedBytes, StandardCharsets.UTF_8);
+        } catch (Exception e) {
+            Gdx.app.error("GameSaveService", "Decryption error: " + e.getMessage());
+            throw new RuntimeException("Decryption failed", e);
+        }
+    }
+
+    private String generateChecksum(String data) {
+        try {
+            MessageDigest md = MessageDigest.getInstance("SHA-256");
+            byte[] hashBytes = md.digest(data.getBytes(StandardCharsets.UTF_8));
+            StringBuilder sb = new StringBuilder();
+            for (byte b : hashBytes) {
+                sb.append(String.format("%02x", b));
+            }
+            return sb.toString();
+        } catch (Exception e) {
+            Gdx.app.error("GameSaveService", "Checksum generation error: " + e.getMessage());
+            throw new RuntimeException("Checksum generation failed", e);
+        }
+    }
+
+    public String getChecksum() {
+        return checksum;
+    }
+
+    public void setChecksum(String checksum) {
+        this.checksum = checksum;
     }
 
     public void saveLearnedWords(Character character) {
@@ -156,6 +227,7 @@ public class GameSaveController {
         copy.setTargetY(original.getTargetY());
         copy.setDirection(original.getDirection());
         copy.setScore(original.getScore());
+
         // Copy any other essential character data
         // (Items, stats, quests, etc. - add as needed)
 
@@ -182,8 +254,12 @@ public class GameSaveController {
             copy.setStatus(statusCopy);
         }
 
-        copy.setWordFilePath(original.getWordFilePath());
+        // Copy achievements if present
+        if (original.getAchievements() != null) {
+            copy.setAchievements(new HashSet<>(original.getAchievements()));
+        }
 
+        copy.setWordFilePath(original.getWordFilePath());
 
         return copy;
     }
@@ -221,8 +297,50 @@ public class GameSaveController {
         }
         try {
             FileHandle file = Gdx.files.local(SAVE_DIRECTORY + filename);
-            String json = file.readString();
-            return objectMapper.readValue(json, GameSave.class);
+            String fileContent = file.readString();
+            String jsonData;
+
+            // Check if file is encrypted (encrypted content starts with base64 characters)
+            if (fileContent.startsWith("{")) {
+                // Unencrypted JSON file - use directly
+                jsonData = fileContent;
+                Gdx.app.log("GameSaveService", "Loading unencrypted save (legacy format)");
+            } else {
+                // Encrypted file - decrypt first
+                jsonData = decrypt(fileContent);
+            }
+
+            // Parse GameSave
+            GameSave gameSave = objectMapper.readValue(jsonData, GameSave.class);
+
+            // Check if checksum exists
+            if (getChecksum() != null) {
+                // Extract and verify checksum
+                String storedChecksum = getChecksum();
+
+                // Temporarily remove checksum for verification
+                setChecksum(null);
+
+                // Regenerate JSON without the checksum field
+                String dataToVerify = objectMapper.writeValueAsString(gameSave);
+
+                // Generate new checksum from data
+                String calculatedChecksum = generateChecksum(dataToVerify);
+
+                // Verify checksum
+                if (!calculatedChecksum.equals(storedChecksum)) {
+                    Gdx.app.error("GameSaveService", "Save file has been tampered with!");
+                    return null;
+                }
+
+                // Restore checksum
+                setChecksum(storedChecksum);
+            } else {
+                Gdx.app.log("GameSaveService", "Loading save without checksum (legacy format)");
+            }
+
+            return gameSave;
+
         } catch (Exception e) {
             Gdx.app.error("GameSaveService", "Error loading game: " + e.getMessage());
             e.printStackTrace();

@@ -1,0 +1,74 @@
+[
+  {
+    "id": "first_victory",
+    "title": "Chiến Thắng Đầu Tiên",
+    "description": "Chiến thắng đầu tiên của bạn",
+    "type": "COMBAT_WIN",
+    "targetValue": 1
+  },
+  {
+    "id": "first_fallen",
+    "title": "Trận Thua Đầu Tiên",
+    "description": "Thất bại là mẹ thành công",
+    "type": "FALLEN",
+    "targetValue": 1
+  },
+  {
+    "id": "first_wrong_word",
+    "title": "Từ Sai Đầu Tiên",
+    "description": "Thất bại là mẹ thành công",
+    "type": "FAILED_WORD",
+    "targetValue": 1
+  },
+  {
+    "id": "first_victory_2",
+    "title": "Chiến Thắng",
+    "description": "Chiến thắng thu 5 của bạn",
+    "type": "COMBAT_WIN",
+    "targetValue": 5
+  },
+  {
+    "id": "first_victory_3",
+    "title": "Chiến Thắng",
+    "description": "Chiến thắng thu 5 của bạn",
+    "type": "COMBAT_WIN",
+    "targetValue": 10
+  },
+  {
+    "id": "first_victory_4",
+    "title": "Chiến Thắng",
+    "description": "Chiến thắng thu 5 của bạn",
+    "type": "COMBAT_WIN",
+    "targetValue": 15
+  },
+  {
+    "id": "word_master",
+    "title": "Bậc Thầy Từ Vựng",
+    "description": "Tìm thấy 10 từ khác nhau",
+    "type": "WORD_COUNT",
+    "targetValue": 10
+  },
+
+  {
+    "id": "word_master_2",
+    "title": "Bậc Thầy Từ Vựng",
+    "description": "Tìm thấy 20 từ khác nhau",
+    "type": "WORD_COUNT",
+    "targetValue": 20
+  },
+  {
+    "id": "word_master_2",
+    "title": "Bậc Thầy Từ Vựng",
+    "description": "Tìm thấy 20 từ khác nhau",
+    "type": "WORD_COUNT",
+    "targetValue": 30
+  },
+  {
+    "id": "dragon_slayer",
+    "title": "Người Diệt Rồng",
+    "description": "Đánh bại con rồng",
+    "type": "ENEMY_DEFEAT",
+    "targetValue": 1,
+    "enemyId": "dragon_boss"
+  }
+]

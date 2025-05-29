@@ -18,6 +18,8 @@ public class WordDefinition {
         this.antonyms = new HashSet<>();
     }
 
+
+
     // Getters and setters
     public String getPartOfSpeech() {
         return partOfSpeech;

@@ -19,7 +19,11 @@ public class InputController extends InputAdapter {
     private final float MOVE_DELAY = 0.42f; // seconds
     private MapRenderer mapRenderer;
     private boolean debugLog = true;
+    private EffectManager effectManager;
 
+    public void setEffectManager(EffectManager effectManager) {
+        this.effectManager = effectManager;
+    }
 
     private int[] toIsometricGrid(float worldX, float worldY) {
         // Get map properties
@@ -98,8 +102,13 @@ public class InputController extends InputAdapter {
         if (state == GameState.EXPLORING) {
             if (moveCooldown > 0) return false;
 
-            if(gameController.getInventoryUI().isVisible()){
-                gameController.getInventoryUI().handleClick(screenX,screenY);
+            if (gameController.getInventoryUI().isVisible()) {
+                gameController.getInventoryUI().handleClick(screenX, screenY);
+                return true;
+            }
+
+            if (gameController.getAchievementUI().isActive()) {
+                gameController.getAchievementUI().handleInput(screenX, screenY);
                 return true;
             }
 
@@ -209,6 +218,7 @@ public class InputController extends InputAdapter {
         if (gameController.hasActiveEvent()) {
             switch (keycode) {
                 case Keys.E, Keys.SPACE -> {
+                    effectManager.playClickSound();
                     gameController.handleEventProperties(gameController.getProperties(), gameController.getCurrentEventType());
                 }
                 default -> {
@@ -222,7 +232,18 @@ public class InputController extends InputAdapter {
                 }
                 gameController.setState(GameState.DICTIONARY);
             }
-            case Keys.ESCAPE -> gameController.setState(GameState.MENU);
+            case Keys.F -> {
+                if (gameController.getAchievementUI().isActive())
+                    gameController.getAchievementUI().hide();
+                else
+                    gameController.showAchievementUI();
+            }
+            case Keys.ESCAPE -> {
+                if (gameController.getAchievementUI().isActive())
+                    gameController.getAchievementUI().hide();
+                else
+                gameController.setState(GameState.MENU);
+            }
             case Keys.TAB -> gameController.getExploringUI().toggleUI();
             case Keys.I -> { // Toggle inventory
                 if (gameController.getInventoryUI() != null) {
@@ -335,7 +356,10 @@ public class InputController extends InputAdapter {
 //            return true;
 //        }
         switch (keycode) {
-            case Keys.ESCAPE -> gameController.setState(GameState.MENU);
+            case Keys.ESCAPE -> {
+                gameController.setState(GameState.MENU);
+                effectManager.playClickSound();
+            }
             default -> {
             }
         }
@@ -358,7 +382,7 @@ public class InputController extends InputAdapter {
         switch (keycode) {
             case Keys.ESCAPE -> {
                 System.out.println(gameController.getCurrentState() + " " + gameController.getPreviousState());
-                if(gameController.getPreviousState() == GameState.MAIN_MENU) {
+                if (gameController.getPreviousState() == GameState.MAIN_MENU) {
                     gameController.setState(GameState.MAIN_MENU);
                     gameController.setPreviousState(GameState.MAIN_MENU);
                     return true;
@@ -410,11 +434,13 @@ public class InputController extends InputAdapter {
             }
             case Keys.ENTER, Keys.SPACE -> {
                 if (!dialogUI.isTextFullyDisplayed()) {
+                    effectManager.playClickSound();
                     dialogUI.completeTextAnimation();
                 } else {
                     if (gameController.getDialogController().hasChoices()) {
                         gameController.getDialogController().selectChoice(
                                 gameController.getDialogController().getSelectedChoiceIndex());
+                        effectManager.playClickSound();
                     } else if (!gameController.getDialogController().nextDialog()) {
                         gameController.getDialogController().endDialog();
                     }
@@ -423,10 +449,13 @@ public class InputController extends InputAdapter {
             }
             case Keys.UP -> {
                 gameController.getDialogController().selectPreviousChoice();
+                effectManager.playClickSound();
+
                 return true;
             }
             case Keys.DOWN -> {
                 gameController.getDialogController().selectNextChoice();
+                effectManager.playClickSound();
                 return true;
             }
             default -> {
@@ -445,8 +474,7 @@ public class InputController extends InputAdapter {
                 quizController.processInput(character);
                 return true;
             }
-        }
-        else if (gameController.getCurrentState() == GameState.DICTIONARY) {
+        } else if (gameController.getCurrentState() == GameState.DICTIONARY) {
             return gameController.getDictionaryView().handleKeyTyped(character);
         }
         return false;

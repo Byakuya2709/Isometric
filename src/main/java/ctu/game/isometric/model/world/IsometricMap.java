@@ -108,14 +108,7 @@ public class IsometricMap {
     }
 
     // Initialize walkable cache
-    public void initializeWalkableCache() {
-        walkableCache = new boolean[mapHeight][mapWidth];
-        for (int y = 0; y < mapHeight; y++) {
-            for (int x = 0; x < mapWidth; x++) {
-                walkableCache[y][x] = calculateWalkable(x, y);
-            }
-        }
-    }
+
 
     // Made public so chunks can use it
     public boolean calculateWalkable(int x, int y) {
@@ -149,7 +142,14 @@ public class IsometricMap {
         }
     }
 
-    // Get map data (cached)
+  public void initializeWalkableCache() {
+            walkableCache = new boolean[mapHeight][mapWidth];
+            for (int y = 0; y < mapHeight; y++) {
+                for (int x = 0; x < mapWidth; x++) {
+                    walkableCache[y][x] = calculateWalkable(x, y);
+                }
+            }
+        }
     public int[][] getMapData() {
         return mapData;
     }

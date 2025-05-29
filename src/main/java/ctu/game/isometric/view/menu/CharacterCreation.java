@@ -249,7 +249,9 @@ public class CharacterCreation {
 
         character.setGender(Gender.valueOf(playerGender));
         // Signal that character has been created
+
         gameController.setCreated(true);
+        gameController.getAchievementManager().setProgressForCharater();
     }
 
     public void dispose() {

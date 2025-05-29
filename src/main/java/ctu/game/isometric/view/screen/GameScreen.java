@@ -55,7 +55,6 @@ public class GameScreen implements Screen {
         // Cập nhật game
         gameController.update(delta);
         gameController.getTransitionController().update(delta);
-
         // Chỉ khởi tạo 1 lần khi gameController vừa tạo xong
 
         if (gameController.isCreated()) {
@@ -74,6 +73,8 @@ public class GameScreen implements Screen {
                     game.getAssetManager(),
                     mapRenderer
             );
+
+
 
             InventoryUI inventoryUI = new InventoryUI(gameController);
             gameController.setInventoryUI(inventoryUI);
@@ -100,7 +101,9 @@ public class GameScreen implements Screen {
             gameController.resetLearnedWords();
             gameController.setDictionaryView(new DictionaryView(gameController,gameController.getDictionary(), gameController.getWordNetValidator()));
 
+
             // Reset flag
+            gameController.getAchievementUI().hide();
             gameController.setCreated(false);
         }
 
@@ -140,11 +143,17 @@ public class GameScreen implements Screen {
                     batch.end();
 
                     // Render the UI on top
+
+
                     if (exploringUI != null) exploringUI.render();
 
                     if (gameController.getInventoryUI() != null) {
                         gameController.getInventoryUI().render(batch);
                     }
+                    if(gameController.getAchievementUI().isActive()){
+                        gameController.getAchievementUI().render(batch);
+                    }
+
                     if (dialogUI != null && gameController.getDialogController().isDialogActive()) {
 
                         dialogUI.render();
@@ -152,6 +161,8 @@ public class GameScreen implements Screen {
                         gameController.getEffectManager().render(batch);
                         batch.end();
                     }
+
+
                     // Begin the batch again for any subsequent rendering
                     batch.begin();
                     break;
@@ -213,6 +224,11 @@ public class GameScreen implements Screen {
 
     @Override
     public void pause() {
+        if (gameController.getCurrentState() == GameState.MAIN_MENU || gameController.getCurrentState() == GameState.SETTINGS) {
+                return;
+        }
+        System.out.println("GameScreen paused");
+        gameController.setState(GameState.MENU);
     }
 
     @Override

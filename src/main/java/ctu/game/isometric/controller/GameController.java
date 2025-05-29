@@ -27,6 +27,7 @@ import ctu.game.isometric.model.world.IsometricMap;
 import ctu.game.isometric.util.EnemyLoader;
 import ctu.game.isometric.util.WordNetValidator;
 import ctu.game.isometric.view.renderer.TransitionRenderer;
+import ctu.game.isometric.view.ui.AchievementUI;
 import ctu.game.isometric.view.ui.ExploringUI;
 import ctu.game.isometric.view.ui.InventoryUI;
 
@@ -70,6 +71,8 @@ public class GameController {
 
     private EventManager eventManager;
     private MapEvent currentEvent;
+    private AchievementManager achievementManager;
+    private AchievementUI achievementUI;
 
     public GameController(IsometricGame game) {
         this.game = game;
@@ -104,7 +107,10 @@ public class GameController {
         initializeDictionary();
         this.musicController.initialize();
         this.musicController.playMusicForState(GameState.MAIN_MENU);
+        inputController.setEffectManager(effectManager);
 
+        achievementManager = new AchievementManager(this);
+        achievementUI = new AchievementUI(this);
 
     }
 
@@ -116,6 +122,13 @@ public class GameController {
         if (dictionaryView == null) {
             dictionaryView = new ctu.game.isometric.view.view.DictionaryView(this,dictionary,this.wordNetValidator);
         }
+    }
+    public void showAchievementUI() {
+        achievementUI.show();
+    }
+
+    public AchievementUI getAchievementUI() {
+        return achievementUI;
     }
 
     public void resetLearnedWords() {
@@ -544,6 +557,14 @@ public class GameController {
             eventManager.completeEvent(currentEvent.getId());
 
         });
+    }
+
+    public AchievementManager getAchievementManager() {
+        return achievementManager;
+    }
+
+    public void setAchievementManager(AchievementManager achievementManager) {
+        this.achievementManager = achievementManager;
     }
 
     public boolean hasActiveEvent() {

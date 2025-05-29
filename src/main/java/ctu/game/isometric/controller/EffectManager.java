@@ -28,7 +28,7 @@ public class EffectManager implements Disposable {
     }
 
     public void loadSoundEffects() {
-
+        loadSound("click", "audio/effects");
     }
 
     public void loadSound(String effectName, String soundDir) {
@@ -45,6 +45,10 @@ public class EffectManager implements Disposable {
         } catch (Exception e) {
             Gdx.app.error("EffectManager", "Error loading effect: " + effectPath, e);
         }
+    }
+
+    public void playClickSound() {
+        playSound("click");
     }
 
     // Spawn effect immediately

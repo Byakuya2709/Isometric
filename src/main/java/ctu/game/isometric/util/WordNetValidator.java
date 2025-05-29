@@ -22,7 +22,8 @@ public class WordNetValidator {
     private static final int CACHE_SIZE = 100;
 
     // Filter parameters
-    private static final int MIN_WORD_LENGTH = 3;
+    //change to 1
+    private static final int MIN_WORD_LENGTH = 1;
     private static final int MAX_WORD_LENGTH = 11;
 
     public WordNetValidator() {

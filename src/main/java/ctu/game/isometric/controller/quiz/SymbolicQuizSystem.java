@@ -21,10 +21,16 @@ public class SymbolicQuizSystem {
     }
 
 
+
+
     public Map<String, Object> generateContextualSentenceQuiz() {
         if (learnedWords.isEmpty()) {
             return createErrorResponse("No words available");
         }
+
+
+
+
 
         String wordUpperCase = getRandomWord(); // IS ALL UPPER CASE
         String word = wordUpperCase.toLowerCase(); // Normalize for dictionary lookup
@@ -33,6 +39,9 @@ public class SymbolicQuizSystem {
         if (details == null || details.getDefinitions().isEmpty()) {
             return createErrorResponse("No details available for word: " + word);
         }
+
+
+
 
         List<String> examples = new ArrayList<>();
 
