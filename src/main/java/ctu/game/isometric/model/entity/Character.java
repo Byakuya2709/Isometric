@@ -85,6 +85,20 @@ public class Character {
     }
 
     // Existing getters/setters...
+    private Array<int[]> currentPath = new Array<>();
+    private int currentPathIndex = 0;
+
+    public void setPath(Array<int[]> path) {
+        this.currentPath = path;
+        this.currentPathIndex = 0;
+        if (path.size > 0) {
+            isMoving = true;
+            int[] nextPoint = path.get(0);
+            moveToward(nextPoint[0], nextPoint[1]);
+        }
+    }
+
+
 
     public boolean hasItem(String itemName) {
         if (items == null || items.isEmpty()) {
@@ -274,9 +288,20 @@ public class Character {
         if (distanceSquared < 0.0001f) {
             gridX = targetX;
             gridY = targetY;
-            isMoving = false;
-            animationTime = 0; // Reset animation time when stopping
+
+            // Check if we have more points in the path
+            if (currentPath.size > 0 && currentPathIndex < currentPath.size - 1) {
+                currentPathIndex++;
+                int[] nextPoint = currentPath.get(currentPathIndex);
+                moveToward(nextPoint[0], nextPoint[1]);
+            } else {
+                isMoving = false;
+                animationTime = 0;
+                currentPath.clear();
+                currentPathIndex = 0;
+            }
         } else {
+            // Rest of your existing update code
             float moveAmount = moveSpeed * delta;
             float distance = (float) Math.sqrt(distanceSquared);
 
@@ -292,7 +317,7 @@ public class Character {
                     gridX = targetX;
                     gridY = targetY;
                 }
-                isMoving = false;
+                isMoving = true; // Keep moving if we have more path points
                 animationTime = 0;
             } else {
                 float ratio = moveAmount / distance;
@@ -317,6 +342,8 @@ public class Character {
                     // Stop movement if we hit an invalid tile
                     isMoving = false;
                     animationTime = 0;
+                    currentPath.clear();
+                    currentPathIndex = 0;
                 }
             }
         }

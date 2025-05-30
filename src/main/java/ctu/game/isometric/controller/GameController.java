@@ -7,6 +7,7 @@ import com.badlogic.gdx.maps.MapObject;
 import com.badlogic.gdx.maps.MapProperties;
 import com.badlogic.gdx.maps.objects.RectangleMapObject;
 import com.badlogic.gdx.math.Rectangle;
+import com.badlogic.gdx.utils.Array;
 import ctu.game.isometric.IsometricGame;
 import ctu.game.isometric.model.dictionary.Dictionary;
 import ctu.game.isometric.model.dictionary.Word;
@@ -74,6 +75,8 @@ public class GameController {
     private AchievementManager achievementManager;
     private AchievementUI achievementUI;
 
+    private Pathfinder pathfinder;
+
     public GameController(IsometricGame game) {
         this.game = game;
 
@@ -99,7 +102,7 @@ public class GameController {
         this.wordNetValidator = new WordNetValidator();
         this.wordNetValidator.loadDictionary();
 
-
+        this.pathfinder = new Pathfinder(map);
 
         this.gameplayController = new GameplayController(this);
         this.quizController = new QuizController(this);
@@ -142,6 +145,27 @@ public class GameController {
         dictionary.setLearnedWords(learnedWordList);
         dictionary.getNewWords().clear();
 
+    }
+
+    public void moveCharacterAlongPath(int targetX, int targetY) {
+        int startX = (int) character.getGridX();
+        int startY = (int) character.getGridY();
+
+        // Find path with a reasonable maximum length
+        Array<int[]> path = pathfinder.findPath(startX, startY, targetX, targetY, 100);
+
+        if (path.size > 0) {
+            // Remove the first point if it's the current position
+            if (path.size > 1 && path.get(0)[0] == startX && path.get(0)[1] == startY) {
+                path.removeIndex(0);
+            }
+
+            character.setPath(path);
+
+            checkPositionEvents(targetX,targetY);
+            // Play a movement sound
+            effectManager.playClickSound();
+        }
     }
 
 
@@ -301,6 +325,7 @@ public class GameController {
     public GameState getPreviousState() {
         return previousState;
     }
+
     public boolean canMove(int dx, int dy) {
         int newX = (int) (character.getGridX() + dx);
         int newY = (int) (character.getGridY() + dy);
@@ -477,6 +502,10 @@ public class GameController {
     }
 
     public void handleEventProperties(MapProperties properties, String event) {
+
+        if (currentEventX != getCharacter().getGridX() || currentEventY != getCharacter().getGridY() || getCharacter().isMoving() == true) {
+            return;
+        }
             switch (event) {
                 case "battle":
 
@@ -599,47 +628,14 @@ public class GameController {
         this.font = font;
     }
 
-    //    public boolean[][] getWalkableTiles() {
-//        // First check if map is valid
-//        if (map == null || map.getMapData() == null || map.getMapData().length == 0) {
-//            return new boolean[0][0];
-//        }
-//
-//        int height = map.getMapData().length;
-//        int width = map.getMapData()[0].length;
-//        boolean[][] walkable = new boolean[height][width];
-//
-//        // Initialize all tiles as not walkable
-//        for (int y = 0; y < height; y++) {
-//            for (int x = 0; x < width; x++) {
-//                walkable[y][x] = false;
-//            }
-//        }
-//
-//        // Mark only adjacent walkable tiles
-//        int charX = (int) character.getGridX();
-//        int charY = (int) character.getGridY();
-//
-//        // Check adjacent tiles (up, down, left, right)
-//        int[][] directions = {{0, -1}, {0, 1}, {-1, 0}, {1, 0}};
-//        for (int[] dir : directions) {
-//            int newX = charX + dir[0];
-//            int newY = charY + dir[1];
-//
-//            // First validate that this position is inside the map
-//            if (newX < 0 || newY < 0 || newX >= width || newY >= height) {
-//                continue; // Skip this direction if it's outside the map
-//            }
-//
-//            // Then check if we can move there
-//            if (canMove(dir[0], dir[1])) {
-//                walkable[newY][newX] = true;
-//            }
-//        }
-//
-//        return walkable;
-//    }
-    // Getters
+    public Pathfinder getPathfinder() {
+        return pathfinder;
+    }
+
+    public void setPathfinder(Pathfinder pathfinder) {
+        this.pathfinder = pathfinder;
+    }
+
     public Character getCharacter() { return character; }
     public IsometricMap getMap() { return map; }
     public InputController getInputController() { return inputController; }

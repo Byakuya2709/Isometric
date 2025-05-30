@@ -141,8 +141,12 @@ public class InputController extends InputAdapter {
                 // Only move if the target tile is walkable
                 moveCharacter(dx, dy);
                 moveCooldown = MOVE_DELAY;
-                return true;
+            } else {
+                // For non-adjacent tiles, use pathfinding
+                gameController.moveCharacterAlongPath(targetX, targetY);
+                moveCooldown = MOVE_DELAY;
             }
+            return true;
         }
 
         if (state == GameState.MENU) {
