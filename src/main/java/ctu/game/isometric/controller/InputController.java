@@ -136,9 +136,11 @@ public class InputController extends InputAdapter {
                 Gdx.app.log("Mouse", "Delta: " + dx + "," + dy);
             }
 
-            // Only allow movement to adjacent tiles (including diagonals)
+            /* Only allow movement to adjacent tiles ( not including diagonals)
+           if ((Math.abs(dx) == 1 && dy == 0) || (Math.abs(dy) == 1 && dx == 0)) */
+
+                // Only allow movement to adjacent tiles (including diagonals)
             if (Math.abs(dx) <= 1 && Math.abs(dy) <= 1 && (dx != 0 || dy != 0)) {
-                // Only move if the target tile is walkable
                 moveCharacter(dx, dy);
                 moveCooldown = MOVE_DELAY;
             } else {

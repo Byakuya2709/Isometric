@@ -152,7 +152,7 @@ public class GameController {
         int startY = (int) character.getGridY();
 
         // Find path with a reasonable maximum length
-        Array<int[]> path = pathfinder.findPath(startX, startY, targetX, targetY, 100);
+        Array<int[]> path = pathfinder.findPath(startX, startY, targetX, targetY, 30);
 
         if (path.size > 0) {
             // Remove the first point if it's the current position
@@ -161,10 +161,11 @@ public class GameController {
             }
 
             character.setPath(path);
+            effectManager.playClickSound();
+
 
             checkPositionEvents(targetX,targetY);
             // Play a movement sound
-            effectManager.playClickSound();
         }
     }
 

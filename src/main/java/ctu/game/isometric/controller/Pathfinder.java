@@ -66,14 +66,16 @@ public class Pathfinder {
             Node current = openSet.poll();
 
             // Check if we reached the goal
+//            Nếu đến đích thì reconstruct lại đường đi.
+
             if (current.x == goalX && current.y == goalY) {
                 return reconstructPath(current, maxLength);
             }
-
             String key = current.x + "," + current.y;
             closedSet.add(key);
 
             // Check all neighbors
+            // Nếu không thể đi hoặc đã duyệt -> bỏ qua
             for (int[] dir : directions) {
                 int nx = current.x + dir[0];
                 int ny = current.y + dir[1];
@@ -115,9 +117,11 @@ public class Pathfinder {
     }
 
     private int[] findClosestWalkable(int x, int y) {
+//        Bắt đầu tìm kiếm từ khoảng cách (bán kính) là 1.
         int searchRadius = 1;
+//        Giới hạn việc tìm kiếm trong bán kính tối đa là 10 ô để tránh kiểm tra vô hạn.
         int maxSearchRadius = 10;
-
+        // Search in expanding squares around the original coordinates
         while (searchRadius <= maxSearchRadius) {
             for (int offsetY = -searchRadius; offsetY <= searchRadius; offsetY++) {
                 for (int offsetX = -searchRadius; offsetX <= searchRadius; offsetX++) {
@@ -137,7 +141,7 @@ public class Pathfinder {
         // Default to original coordinates if no walkable found
         return new int[]{x, y};
     }
-
+//    khoảng cách Manhattan giữa hai điểm trên lưới (grid)
     private float heuristic(int x1, int y1, int x2, int y2) {
         // Manhattan distance for grid movement
         return Math.abs(x1 - x2) + Math.abs(y1 - y2);
